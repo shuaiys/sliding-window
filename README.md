@@ -2,6 +2,20 @@
 滑动窗口，可用于消息去重，延迟消费，流量控制等场景.
 ## 使用方法:
 ```go
+type CustomEvent struct {
+    ID   string
+    Name string
+    *NonMerge
+}
+
+func (c *CustomEvent) Key() string {
+    return c.ID
+}
+
+func (c *CustomEvent) Listen(meta *Meta) {
+    fmt.Println(c.ID, c.Name, meta.AddTime, meta.RepeatTimes)
+}
+
 func main() {
     win := window.New()
     defer win.Close()
