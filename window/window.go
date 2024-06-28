@@ -140,6 +140,7 @@ func (w *Window) resetExpiration() {
 // Close 关闭窗口，停止定时器。
 func (w *Window) Close() {
 	w.expiration.Stop()
+	w.pool.Release()
 }
 
 // 将事件加入buffer池
