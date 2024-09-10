@@ -125,6 +125,7 @@ func (w *Window) pop() *WinEvent {
 	if w.head == nil {
 		w.curr = nil
 	}
+	w.resetExpiration()
 	return event
 }
 
@@ -133,7 +134,16 @@ func (w *Window) resetExpiration() {
 	// 重置定时器
 	if len(w.buffer) > 0 {
 		firstEle := w.head
-		w.expiration.Reset(firstEle.expireAt.Sub(time.Now()))
+		if firstEle == nil {
+			return
+		}
+		if w.expiration == nil {
+			w.expiration = time.AfterFunc(firstEle.expireAt.Sub(time.Now()), func() {
+				w.pop()
+			})
+		} else {
+			w.expiration.Reset(firstEle.expireAt.Sub(time.Now()))
+		}
 	}
 }
 
@@ -155,13 +165,17 @@ func (w *Window) pushBuffer(we *WinEvent) {
 
 	} else {
 		w.head = we
-		w.expiration.Reset(we.expireAt.Sub(time.Now()))
+		if w.expiration == nil {
+			w.expiration = time.AfterFunc(we.expireAt.Sub(time.Now()), func() {
+				w.pop()
+			})
+		} else {
+			w.expiration.Reset(we.expireAt.Sub(time.Now()))
+		}
 	}
 	w.curr = we
 	// 如果缓冲区满了，移除最早的事件
-	if len(w.buffer) > w.config.size {
+	if len(w.buffer) > w.size {
 		w.pop()
-		// 更新窗口过期定时器
-		w.resetExpiration()
 	}
 }
